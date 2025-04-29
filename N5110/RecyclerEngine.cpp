@@ -3,12 +3,26 @@
 
 RecyclerEngine::RecyclerEngine() {}
 
+void RecyclerEngine::setDifficulty(Difficulty d) {
+    difficulty = d;
+
+    if (d == EASY) {
+        drop_speed = 2;
+        harmful_chance = 25;
+        lives = 3;
+    } else {
+        drop_speed = 4;
+        harmful_chance = 60;
+        lives = 1;
+    }
+}
+
 void RecyclerEngine::init() {
-    player.x = 42; player.y = 44;   // Center bottom
-    score = 0; lives = 3;
+    player.x = 42;
+    player.y = 44;
+    score = 0;
     spawn_timer = 0;
 
-    // Deactivate all items
     for (int i = 0; i < 5; i++) {
         items[i].active = false;
     }
@@ -19,14 +33,14 @@ int RecyclerEngine::update(UserInput input) {
     spawn_items();
     update_items();
     check_collisions();
-    return lives;  // Report remaining lives
+    return lives;
 }
 
 void RecyclerEngine::move_player(UserInput input) {
     if (input.direction == Direction::E && player.x < 78)
-        player.x += 2;
+        player.x += 4;  // increased speed
     if (input.direction == Direction::W && player.x > 2)
-        player.x -= 2;
+        player.x -= 4;  // increased speed
 }
 
 void RecyclerEngine::spawn_items() {
@@ -36,7 +50,8 @@ void RecyclerEngine::spawn_items() {
             if (!items[i].active) {
                 items[i].x = rand() % 80;
                 items[i].y = 0;
-                items[i].type = rand() % 4;
+                int chance = rand() % 100;
+                items[i].type = (chance < harmful_chance) ? 3 : rand() % 3;
                 items[i].active = true;
                 break;
             }
@@ -48,8 +63,9 @@ void RecyclerEngine::spawn_items() {
 void RecyclerEngine::update_items() {
     for (int i = 0; i < 5; i++) {
         if (items[i].active) {
-            items[i].y += 2;
-            if (items[i].y > 48) items[i].active = false;
+            items[i].y += drop_speed;  // speed depends on difficulty
+            if (items[i].y > 48)
+                items[i].active = false;
         }
     }
 }
@@ -70,10 +86,8 @@ void RecyclerEngine::check_collisions() {
 }
 
 void RecyclerEngine::draw(N5110 &lcd) {
-    // Draw player cart
     lcd.drawRect(player.x, player.y, 6, 3, FILL_BLACK);
 
-    // Draw items (circle for recyclable, square for harmful)
     for (int i = 0; i < 5; i++) {
         if (items[i].active) {
             if (items[i].type == 3)
@@ -83,7 +97,6 @@ void RecyclerEngine::draw(N5110 &lcd) {
         }
     }
 
-    // Display score and lives
     char buffer[14];
     sprintf(buffer, "Score:%d", score);
     lcd.printString(buffer, 0, 0);
