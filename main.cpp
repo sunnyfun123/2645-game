@@ -13,9 +13,10 @@ Joystick joystick(PC_1, PC_0);                    // Joystick pins
 DigitalIn buttonA(BUTTON1);                       // Blue on-board button (PC_13)
 DigitalIn easyBtn(PC_10, PullDown);               // Easy mode button
 DigitalIn hardBtn(PC_12, PullDown);               // Hard mode button
+DigitalOut led(PC_9);                             // LED output pin
+PwmOut buzzer(PC_8);                              // Passive buzzer using PWM
 
 RecyclerEngine recycler;
-PwmOut buzzer(PC_8);                              // Passive buzzer using PWM
 
 void init();
 void render();
@@ -29,6 +30,8 @@ int main() {
     select_difficulty();     // Wait for easy/hard button press
     recycler.setDifficulty(difficulty); // Set difficulty for game
     render();
+
+        led = 0;  // Turn off LED when game starts
 
     int fps = 10;
     int lives = 3;
@@ -50,6 +53,7 @@ void init() {
     lcd.setBrightness(0.5);
     joystick.init();
     recycler.init();
+     led = 0;  // Ensure LED is off on boot
 }
 
 // Render all visuals to LCD
@@ -67,10 +71,10 @@ void welcome() {
     lcd.refresh();
 
     while (buttonA.read() == 1) {
-        thread_sleep_for(100);
+        led = !led;                   // Blink LED
+        thread_sleep_for(300);       // Blink rate
     }
 }
-
 // Wait for difficulty selection via buttons
 void select_difficulty() {
     lcd.clear();
@@ -80,6 +84,7 @@ void select_difficulty() {
     lcd.refresh();
 
     while (true) {
+        led = !led;  // Continue blinking
         if (easyBtn.read() == 1) {
             difficulty = EASY;
             break;
@@ -87,7 +92,7 @@ void select_difficulty() {
             difficulty = HARD;
             break;
         }
-        thread_sleep_for(100);
+        thread_sleep_for(300);
     }
 }
 

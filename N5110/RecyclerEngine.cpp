@@ -2,6 +2,7 @@
 #include "Joystick.h"
 
 extern PwmOut buzzer;  // Use global passive buzzer
+extern DigitalOut led;     // Global LED
 
 RecyclerEngine::RecyclerEngine() {}
 
@@ -83,7 +84,13 @@ void RecyclerEngine::check_collisions() {
                 // Louder 2.5kHz tone for 1 second
                 buzzer.period(1.0 / 2500);
                 buzzer.write(0.8);
-                thread_sleep_for(1000);
+
+                // Flash LED for 1 second
+                for (int j = 0; j < 5; j++) {
+                    led = !led;
+                    thread_sleep_for(100);
+                }
+                led = 0;
                 buzzer.write(0);
             } else {
                 score += 5;
