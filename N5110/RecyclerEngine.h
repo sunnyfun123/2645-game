@@ -1,20 +1,22 @@
 #ifndef RECYCLERENGINE_H
 #define RECYCLERENGINE_H
 
-enum Difficulty { EASY, HARD };
 #include "mbed.h"
-#include "Joystick.h"
 #include "N5110.h"
+#include "Joystick.h"
 
-// Game object structure
-struct Item {
-    int x, y;
-    int type;      // 0-2: recyclable, 3: harmful
-    bool active;
-};
+enum Difficulty { EASY, HARD };
 
 struct Player {
-    int x, y;
+    int x;
+    int y;
+};
+
+struct Item {
+    int x;
+    int y;
+    int type;      // 0,1,2: recyclable; 3: harmful
+    bool active;
 };
 
 class RecyclerEngine {
@@ -26,10 +28,6 @@ public:
     void setDifficulty(Difficulty d);
 
 private:
-    Difficulty difficulty;
-    int drop_speed;
-    int harmful_chance;
-
     void move_player(UserInput input);
     void spawn_items();
     void update_items();
@@ -37,9 +35,14 @@ private:
 
     Player player;
     Item items[5];
+
     int score;
     int lives;
     int spawn_timer;
+    int drop_speed;
+    int harmful_chance;
+    int last_shield_score; // 🛡️ Track score for adding shield
+    Difficulty difficulty;
 };
 
 #endif

@@ -1,6 +1,8 @@
 #include "RecyclerEngine.h"
 #include "Joystick.h"
 
+extern PwmOut buzzer;  // Use global passive buzzer
+
 RecyclerEngine::RecyclerEngine() {}
 
 void RecyclerEngine::setDifficulty(Difficulty d) {
@@ -77,6 +79,12 @@ void RecyclerEngine::check_collisions() {
             items[i].y > 40) {
             if (items[i].type == 3) {
                 lives--;
+
+                // Louder 2.5kHz tone for 1 second
+                buzzer.period(1.0 / 2500);
+                buzzer.write(0.8);
+                thread_sleep_for(1000);
+                buzzer.write(0);
             } else {
                 score += 5;
             }

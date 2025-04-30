@@ -15,6 +15,7 @@ DigitalIn easyBtn(PC_10, PullDown);               // Easy mode button
 DigitalIn hardBtn(PC_12, PullDown);               // Hard mode button
 
 RecyclerEngine recycler;
+PwmOut buzzer(PC_8);                              // Passive buzzer using PWM
 
 void init();
 void render();
@@ -90,10 +91,17 @@ void select_difficulty() {
     }
 }
 
-// Game over screen
+// Game over screen with 3s passive buzzer sound
 void game_over() {
     lcd.clear();
     lcd.printString(" Game Over ", 0, 2);
     lcd.refresh();
+
+    // Play louder 2.5kHz tone for 3 seconds
+    buzzer.period(1.0 / 2500);
+    buzzer.write(0.8);
+    thread_sleep_for(3000);
+    buzzer.write(0);         // stop sound
+
     while (1);
 }
