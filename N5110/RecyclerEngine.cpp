@@ -1,8 +1,10 @@
 #include "RecyclerEngine.h"
 #include "Joystick.h"
+#include "SevenSegmentDisplay.h"
 
 extern PwmOut buzzer;  // Use global passive buzzer
 extern DigitalOut led;     // Global LED
+extern SevenSegmentDisplay display;
 
 RecyclerEngine::RecyclerEngine() {}
 
@@ -66,9 +68,13 @@ void RecyclerEngine::spawn_items() {
 void RecyclerEngine::update_items() {
     for (int i = 0; i < 5; i++) {
         if (items[i].active) {
-            items[i].y += drop_speed;  // speed depends on difficulty
-            if (items[i].y > 48)
+            items[i].y += drop_speed;
+            if (items[i].y > 48) {
+                if (items[i].type != 3 && difficulty == HARD) {
+                    if (score > 0) score--;
+                }
                 items[i].active = false;
+            }
         }
     }
 }
@@ -117,4 +123,8 @@ void RecyclerEngine::draw(N5110 &lcd) {
     lcd.printString(buffer, 0, 0);
     sprintf(buffer, "Lives:%d", lives);
     lcd.printString(buffer, 50, 0);
+
+    if (lives >= 0 && lives <= 9) {
+        display.display_digit(lives);  //  show life on 7-segment
+    }
 }

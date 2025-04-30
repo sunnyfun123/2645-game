@@ -2,6 +2,7 @@
 #include "N5110.h"
 #include "Joystick.h"
 #include "RecyclerEngine.h"
+#include "SevenSegmentDisplay.h" 
 
 // Define difficulty levels
 
@@ -15,6 +16,7 @@ DigitalIn easyBtn(PC_10, PullDown);               // Easy mode button
 DigitalIn hardBtn(PC_12, PullDown);               // Hard mode button
 DigitalOut led(PC_9);                             // LED output pin
 PwmOut buzzer(PC_8);                              // Passive buzzer using PWM
+SevenSegmentDisplay display(PB_9, PB_8, PB_13, PB_14, PB_15, PA_12, PA_11); 
 
 RecyclerEngine recycler;
 
