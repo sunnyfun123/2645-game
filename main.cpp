@@ -24,7 +24,7 @@ void welcome();
 void select_difficulty();
 
 int main() {
-    int state = 0; // 0: welcome, 1: select difficulty, 2: game loop, 3: game over
+    int state = 0;  // 0: welcome, 1: select difficulty, 2: game loop, 3: game over
     int lives = 3;
     int fps = 10;
 
@@ -56,8 +56,27 @@ int main() {
 
         if (state == 3) {
             lcd.clear();
-            lcd.printString(" Game Over ", 15, 2);
-            lcd.printString("Press Btn", 18, 4);
+            lcd.printString("Game Over", 15, 1);
+
+            int final_score = recycler.get_score();  // 🟩 NEW: get final score
+
+            // 🟩 Display ending message based on final score
+            if (final_score < 50) {
+                lcd.printString("Do more to", 0, 2);
+                lcd.printString("protect env", 0, 3);
+            } else if (final_score < 100) {
+                lcd.printString("Nice try,", 0, 2);
+                lcd.printString("keep going!", 0, 3);
+            } else if (final_score < 200) {
+                lcd.printString("You're making", 0, 2);
+                lcd.printString("a difference!", 0, 3);
+            } else {
+                lcd.printString("Amazing!", 0, 2);
+                lcd.printString("True recycling", 0, 3);
+                lcd.printString("pioneer!", 0, 4);
+            }
+
+            lcd.printString("Press Btn", 18, 5);
             lcd.refresh();
 
             buzzer.period(1.0 / 2500);
@@ -65,12 +84,10 @@ int main() {
             thread_sleep_for(3000);
             buzzer.write(0);
 
-            // Wait for reset button
             while (resetBtn.read() == 1) {
                 thread_sleep_for(100);
             }
 
-            // Return to welcome
             lcd.clear();
             state = 0;
         }

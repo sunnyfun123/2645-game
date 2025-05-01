@@ -19,7 +19,6 @@ struct Item {
     bool active;
 };
 
-int get_score();
 
 class RecyclerEngine {
 public:
@@ -28,6 +27,8 @@ public:
     int update(UserInput input);
     void draw(N5110 &lcd);
     void setDifficulty(Difficulty d);
+    int get_score();
+
 
 private:
     void move_player(UserInput input);

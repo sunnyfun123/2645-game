@@ -150,3 +150,7 @@ void RecyclerEngine::draw(N5110 &lcd) {
         display.display_digit(lives);  //  show life on 7-segment
     }
 }
+
+int RecyclerEngine::get_score() {
+    return score;
+}
