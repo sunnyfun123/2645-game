@@ -20,6 +20,7 @@ void RecyclerEngine::setDifficulty(Difficulty d) {
         harmful_chance = 60;
         lives = 1;
     }
+    last_shield_score = 0;
 }
 
 void RecyclerEngine::init() {
@@ -27,7 +28,8 @@ void RecyclerEngine::init() {
     player.y = 44;
     score = 0;
     spawn_timer = 0;
-
+    last_shield_score = 0; 
+    
     for (int i = 0; i < 5; i++) {
         items[i].active = false;
     }
@@ -48,9 +50,12 @@ void RecyclerEngine::move_player(UserInput input) {
         player.x -= 4;  // increased speed
 }
 
+
+
 void RecyclerEngine::spawn_items() {
     spawn_timer++;
     if (spawn_timer > 10) {
+        // 先生成第一个物品
         for (int i = 0; i < 5; i++) {
             if (!items[i].active) {
                 items[i].x = rand() % 80;
@@ -58,6 +63,19 @@ void RecyclerEngine::spawn_items() {
                 int chance = rand() % 100;
                 items[i].type = (chance < harmful_chance) ? 3 : rand() % 3;
                 items[i].active = true;
+
+              
+                if (difficulty == HARD && items[i].type == 3) {
+                    for (int j = 0; j < 5; j++) {
+                        if (!items[j].active && j != i) {
+                            items[j].x = rand() % 80;
+                            items[j].y = 0;
+                            items[j].type = 3; 
+                            items[j].active = true;
+                            break;
+                        }
+                    }
+                }
                 break;
             }
         }
@@ -100,6 +118,10 @@ void RecyclerEngine::check_collisions() {
                 buzzer.write(0);
             } else {
                 score += 5;
+                if (score - last_shield_score >= 100) {
+                    lives++;
+                    last_shield_score = score;
+                }
             }
             items[i].active = false;
         }

@@ -2,70 +2,96 @@
 #include "N5110.h"
 #include "Joystick.h"
 #include "RecyclerEngine.h"
-#include "SevenSegmentDisplay.h" 
-
-// Define difficulty levels
+#include "SevenSegmentDisplay.h"
 
 Difficulty difficulty = EASY;
 
-// Hardware setup
-N5110 lcd(PC_7, PA_9, PB_10, PB_5, PB_3, PA_10);  // LCD pins
-Joystick joystick(PC_1, PC_0);                    // Joystick pins
-DigitalIn buttonA(BUTTON1);                       // Blue on-board button (PC_13)
-DigitalIn easyBtn(PC_10, PullDown);               // Easy mode button
-DigitalIn hardBtn(PC_12, PullDown);               // Hard mode button
-DigitalOut led(PC_9);                             // LED output pin
-PwmOut buzzer(PC_8);                              // Passive buzzer using PWM
-SevenSegmentDisplay display(PB_9, PB_8, PB_13, PB_14, PB_15, PA_12, PA_11); 
+N5110 lcd(PC_7, PA_9, PB_10, PB_5, PB_3, PA_10);
+Joystick joystick(PC_1, PC_0);
+DigitalIn buttonA(BUTTON1);
+DigitalIn easyBtn(PC_10, PullDown);
+DigitalIn hardBtn(PC_12, PullDown);
+DigitalIn resetBtn(PC_15, PullUp);  // Reset button
+DigitalOut led(PC_9);
+PwmOut buzzer(PC_8);
 
+SevenSegmentDisplay display(PB_9, PB_8, PB_13, PB_14, PB_15, PA_12, PA_11);
 RecyclerEngine recycler;
 
 void init();
 void render();
 void welcome();
-void game_over();
 void select_difficulty();
 
 int main() {
-    init();
-    welcome();               // Show welcome screen, wait for blue button
-    select_difficulty();     // Wait for easy/hard button press
-    recycler.setDifficulty(difficulty); // Set difficulty for game
-    render();
-
-        led = 0;  // Turn off LED when game starts
-
-    int fps = 10;
+    int state = 0; // 0: welcome, 1: select difficulty, 2: game loop, 3: game over
     int lives = 3;
+    int fps = 10;
 
-    while (lives > 0) {
-        UserInput input = {joystick.get_direction(), joystick.get_mag()};
-        lives = recycler.update(input);
-        render();
-        thread_sleep_for(1000 / fps);
+    init();
+
+    while (true) {
+        if (state == 0) {
+            welcome();
+            state = 1;
+        }
+
+        if (state == 1) {
+            select_difficulty();
+            recycler.setDifficulty(difficulty);
+            recycler.init();
+            lcd.clear();
+            state = 2;
+        }
+
+        if (state == 2) {
+            UserInput input = {joystick.get_direction(), joystick.get_mag()};
+            lives = recycler.update(input);
+            render();
+            thread_sleep_for(1000 / fps);
+            if (lives <= 0) {
+                state = 3;
+            }
+        }
+
+        if (state == 3) {
+            lcd.clear();
+            lcd.printString(" Game Over ", 15, 2);
+            lcd.printString("Press Btn", 18, 4);
+            lcd.refresh();
+
+            buzzer.period(1.0 / 2500);
+            buzzer.write(0.8);
+            thread_sleep_for(3000);
+            buzzer.write(0);
+
+            // Wait for reset button
+            while (resetBtn.read() == 1) {
+                thread_sleep_for(100);
+            }
+
+            // Return to welcome
+            lcd.clear();
+            state = 0;
+        }
     }
-
-    game_over();
 }
 
-// Initialization of peripherals
 void init() {
     lcd.init(LPH7366_1);
     lcd.setContrast(0.5);
     lcd.setBrightness(0.5);
     joystick.init();
     recycler.init();
-     led = 0;  // Ensure LED is off on boot
+    led = 0;
 }
 
-// Render all visuals to LCD
 void render() {
     lcd.clear();
     recycler.draw(lcd);
     lcd.refresh();
 }
 
-// Show welcome message and wait for blue button
 void welcome() {
     lcd.clear();
     lcd.printString("Recycler Pioneer", 0, 1);
@@ -73,20 +99,21 @@ void welcome() {
     lcd.refresh();
 
     while (buttonA.read() == 1) {
-        led = !led;                   // Blink LED
-        thread_sleep_for(300);       // Blink rate
+        led = !led;
+        thread_sleep_for(300);
     }
+    led = 0;
 }
-// Wait for difficulty selection via buttons
+
 void select_difficulty() {
     lcd.clear();
     lcd.printString("Select Difficulty", 0, 0);
-    lcd.printString("Easy -> PC_10", 0, 2);
-    lcd.printString("Hard -> PC_12", 0, 3);
+    lcd.printString("Easy -> Btn1", 0, 2);
+    lcd.printString("Hard -> Btn2", 0, 3);
     lcd.refresh();
 
     while (true) {
-        led = !led;  // Continue blinking
+        led = !led;
         if (easyBtn.read() == 1) {
             difficulty = EASY;
             break;
@@ -96,19 +123,5 @@ void select_difficulty() {
         }
         thread_sleep_for(300);
     }
-}
-
-// Game over screen with 3s passive buzzer sound
-void game_over() {
-    lcd.clear();
-    lcd.printString(" Game Over ", 0, 2);
-    lcd.refresh();
-
-    // Play louder 2.5kHz tone for 3 seconds
-    buzzer.period(1.0 / 2500);
-    buzzer.write(0.8);
-    thread_sleep_for(3000);
-    buzzer.write(0);         // stop sound
-
-    while (1);
+    led = 0;
 }

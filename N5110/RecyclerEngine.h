@@ -19,6 +19,8 @@ struct Item {
     bool active;
 };
 
+int get_score();
+
 class RecyclerEngine {
 public:
     RecyclerEngine();
