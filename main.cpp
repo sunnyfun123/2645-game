@@ -22,9 +22,10 @@ void init();
 void render();
 void welcome();
 void select_difficulty();
+void play_melody();  // 
 
 int main() {
-    int state = 0;  // 0: welcome, 1: select difficulty, 2: game loop, 3: game over
+    int state = 0;
     int lives = 3;
     int fps = 10;
 
@@ -58,9 +59,8 @@ int main() {
             lcd.clear();
             lcd.printString("Game Over", 15, 1);
 
-            int final_score = recycler.get_score();  // 🟩 NEW: get final score
+            int final_score = recycler.get_score();
 
-            // 🟩 Display ending message based on final score
             if (final_score < 50) {
                 lcd.printString("Do more to", 0, 2);
                 lcd.printString("protect env", 0, 3);
@@ -74,12 +74,15 @@ int main() {
                 lcd.printString("Amazing!", 0, 2);
                 lcd.printString("True recycling", 0, 3);
                 lcd.printString("pioneer!", 0, 4);
+
+                play_melody();  // play melody if high score
             }
 
             lcd.printString("Press Btn", 18, 5);
             lcd.refresh();
 
-            buzzer.period(1.0 / 2500);
+            //  Louder end beep (1000Hz, 3s)
+            buzzer.period(1.0 / 1000);
             buzzer.write(0.8);
             thread_sleep_for(3000);
             buzzer.write(0);
@@ -141,4 +144,18 @@ void select_difficulty() {
         thread_sleep_for(300);
     }
     led = 0;
+}
+
+//  Melody for score ≥ 200
+void play_melody() {
+    int notes[] = {262, 294, 330, 392, 294, 392, 330}; // C D E G D G E
+    int duration[] = {300, 300, 300, 400, 300, 400, 500};
+
+    for (int i = 0; i < 7; i++) {
+        buzzer.period(1.0 / notes[i]);
+        buzzer.write(0.6);  // suitable duty for passive buzzer
+        thread_sleep_for(duration[i]);
+        buzzer.write(0);
+        thread_sleep_for(100);  // gap between notes
+    }
 }
